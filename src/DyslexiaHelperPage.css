@@ -1,0 +1,374 @@
+/* Import OpenDyslexic font */
+@import url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic@latest/open-dyslexic.css');
+
+/* Dyslexia Helper Styles */
+.dyslexia-helper {
+  min-height: 100vh;
+  font-family: 'OpenDyslexic', 'Comic Sans MS', Arial, sans-serif;
+  padding: 1rem;
+  transition: background-color 0.3s ease;
+  color: #333;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  word-spacing: 0.15em;
+}
+
+/* Header Styles */
+.helper-header {
+  max-width: 1000px;
+  margin: 0 auto 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #556de6;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  font-family: inherit;
+}
+
+.back-button:hover {
+  background: #4157d0;
+  transform: translateY(-1px);
+}
+
+.back-icon {
+  font-size: 1.2rem;
+}
+
+.header-content {
+  padding: 1rem 0;
+}
+
+.helper-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #556de6;
+}
+
+.title-icon {
+  margin-right: 0.5rem;
+}
+
+.helper-subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  font-weight: 400;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main Content */
+.helper-main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.helper-description {
+  background: #f8f9ff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #556de6;
+}
+
+.helper-description p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #444;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.control-group label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+#bgcolor {
+  width: 50px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.play-btn {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  background: #28a745;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.play-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.play-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.play-btn.playing {
+  background: #ffc107;
+  color: #333;
+}
+
+.stop-btn {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.stop-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+/* Text Input Section */
+.text-input-section {
+  margin-bottom: 2rem;
+}
+
+.text-input-section label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+#inputText {
+  width: 100%;
+  min-height: 150px;
+  font-size: 1.2rem;
+  font-family: inherit;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 2px solid #ddd;
+  resize: vertical;
+  background: #ffffff;
+  color: #333;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  word-spacing: 0.15em;
+  box-sizing: border-box;
+}
+
+#inputText:focus {
+  outline: none;
+  border-color: #556de6;
+  box-shadow: 0 0 0 3px rgba(85, 109, 230, 0.1);
+}
+
+/* Text Output Section */
+.text-output-section {
+  margin-bottom: 3rem;
+}
+
+.text-output-section label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.output-text {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', Arial, sans-serif;
+  letter-spacing: 0.12em;
+  word-spacing: 0.25em;
+  font-size: 1.3rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  min-height: 120px;
+  border: 2px solid #eee;
+  line-height: 2;
+  color: #333;
+}
+
+.output-text:focus {
+  outline: none;
+  border-color: #556de6;
+  box-shadow: 0 0 0 3px rgba(85, 109, 230, 0.1);
+}
+
+.word-span {
+  display: inline;
+  padding: 2px 1px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.word-span.highlight {
+  background: #fdff9b;
+  font-weight: 600;
+  animation: highlight-pulse 0.3s ease;
+}
+
+@keyframes highlight-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Features Section */
+.features-section {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.features-section h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f8f9ff;
+  border-left: 4px solid #556de6;
+}
+
+.feature-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.feature-item strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.feature-item p {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dyslexia-helper {
+    padding: 0.5rem;
+  }
+
+  .helper-title {
+    font-size: 2rem;
+  }
+
+  .back-button {
+    position: static;
+    margin-bottom: 1rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .control-group {
+    justify-content: space-between;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .output-text {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .helper-title {
+    font-size: 1.8rem;
+  }
+  
+  .helper-subtitle {
+    font-size: 1rem;
+  }
+  
+  #inputText {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+  
+  .output-text {
+    font-size: 1rem;
+  }
+}

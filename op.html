@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LensAI - Pocket Object Identifier</title>
+
+    <!-- Google Fonts for a friendly look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- TensorFlow.js library for machine learning in the browser -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <!-- MobileNet model for image classification -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest/dist/mobilenet.min.js"></script>
+    <!-- COCO-SSD model for household object detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2"></script>
+
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212; /* Dark background for better contrast */
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main application container */
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        /* Header section */
+        header {
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        
+        header p {
+            margin: 5px 0 0 0;
+            color: #bbbbbb;
+        }
+
+        /* Video feed styling */
+        .camera-feed {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            background-color: #333;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror the camera feed */
+        }
+
+        /* Canvas overlay for detection boxes */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1); /* Mirror to match video */
+            pointer-events: none;
+        }
+
+        /* Result display styling */
+        .result-box {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            font-size: 2em;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            min-height: 50px;
+            width: 90%;
+            max-width: 480px;
+            border: 2px solid #444;
+        }
+        
+        #status {
+             font-size: 0.7em;
+             color: #ffc107; /* Amber color for status messages */
+        }
+
+        /* Control button styling */
+        .controls {
+            padding: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .secondary {
+            background-color: #2962ff;
+        }
+
+        .secondary:hover {
+            background-color: #2556df;
+        }
+
+        .toggle {
+            background-color: #9c27b0;
+        }
+
+        .toggle:hover {
+            background-color: #87229a;
+        }
+
+        .select {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #444;
+            padding: 12px 16px;
+            font-size: 1.05em;
+            border-radius: 12px;
+        }
+
+        .hint {
+            font-size: 0.9em;
+            color: #bbbbbb;
+            width: 100%;
+            text-align: center;
+            margin-top: -10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>LensAI</h1>
+            <p>Your Pocket Object Identifier</p>
+        </header>
+
+        <div class="camera-feed">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <div id="result" class="result-box">
+            <span id="status">Press "Start" to begin</span>
+        </div>
+
+        <div class="controls" role="group" aria-label="Controls">
+            <button id="startButton" class="btn" aria-pressed="false" aria-label="Start or stop the camera">Start Camera</button>
+            <select id="modeSelect" class="select" aria-label="Detection mode">
+                <option value="general">General Mode (MobileNet)</option>
+                <option value="household">Household Mode (COCO-SSD)</option>
+            </select>
+            <button id="voiceToggle" class="btn toggle" aria-pressed="true" aria-label="Toggle voice feedback">Voice: On</button>
+        </div>
+        <div class="hint">Tip: Switch to Household Mode for everyday items like bottle, cup, chair.</div>
+    </div>
+
+    <script>
+        // Get references to the HTML elements
+        const video = document.getElementById('video');
+        const startButton = document.getElementById('startButton');
+        const resultDisplay = document.getElementById('result');
+        const statusDisplay = document.getElementById('status');
+        const overlay = document.getElementById('overlay');
+        const modeSelect = document.getElementById('modeSelect');
+        const voiceToggle = document.getElementById('voiceToggle');
+
+        let mobilenetModel;
+        let cocoModel;
+        let isDetecting = false;
+        let lastSpoken = '';
+        let stream; // To hold the camera stream
+        let mode = 'general';
+        let voiceOn = true;
+
+        // Function to load models and initialize the app
+        async function initialize() {
+            statusDisplay.textContent = 'Loading AI Model...';
+            try {
+                mobilenetModel = await mobilenet.load();
+                statusDisplay.textContent = 'General model ready. Loading Household model...';
+                // Lazy-load COCO-SSD, but do not block the UI
+                cocoSsd.load().then(m => {
+                    cocoModel = m;
+                    if (statusDisplay.textContent.includes('Household')) return;
+                    statusDisplay.textContent = 'All models ready. Press "Start".';
+                }).catch(() => {
+                    // If coco-ssd fails, keep general mode available
+                    if (statusDisplay.textContent.includes('Loading')) {
+                        statusDisplay.textContent = 'General model ready. (Household model unavailable)';
+                    }
+                });
+            } catch (err) {
+                console.error("Failed to load model", err);
+                statusDisplay.textContent = 'Error loading model.';
+            }
+        }
+
+        // Function to start the camera feed
+        async function startCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' } // Prefer the rear camera
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    
+                    isDetecting = true;
+                    startButton.textContent = 'Stop Camera';
+                    statusDisplay.textContent = 'Looking for objects...';
+                    
+                    // Start the detection loop
+                    detectFrame();
+                } catch (err) {
+                    console.error("Error accessing camera", err);
+                    statusDisplay.textContent = 'Could not access camera.';
+                }
+            } else {
+                alert("Your browser does not support camera access.");
+            }
+        }
+
+        // Function to stop the camera and detection
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            isDetecting = false;
+            video.srcObject = null;
+            startButton.textContent = 'Start Camera';
+            statusDisplay.textContent = 'Camera stopped.';
+            lastSpoken = ''; // Reset last spoken word
+            clearCanvas();
+        }
+
+        // Main detection loop
+        async function detectFrame() {
+            if (!isDetecting) {
+                return;
+            }
+
+            try {
+                if (mode === 'household' && cocoModel) {
+                    await runCoco();
+                } else if (mobilenetModel) {
+                    await runMobileNet();
+                }
+            } catch (err) {
+                console.error("Error during detection:", err);
+            }
+
+            // Continue the loop
+            requestAnimationFrame(detectFrame);
+        }
+
+        async function runMobileNet() {
+            clearCanvas();
+            const predictions = await mobilenetModel.classify(video);
+            if (predictions && predictions.length > 0) {
+                const topPrediction = predictions[0];
+                let objectName = topPrediction.className.split(',')[0];
+                if (objectName.includes('knife')) objectName = 'Knife';
+                else if (objectName.includes('mug') || objectName.includes('cup')) objectName = 'Mug';
+                else if (objectName.includes('mouse')) objectName = 'Mouse';
+                resultDisplay.innerHTML = `${objectName} <span style="font-size: 0.5em; color: #ccc;">(${Math.round(topPrediction.probability * 100)}%)</span>`;
+                if (objectName && objectName !== lastSpoken) {
+                    speak(objectName);
+                    lastSpoken = objectName;
+                }
+            }
+        }
+
+        async function runCoco() {
+            // Resize canvas to match video element size each frame (for responsive layout)
+            const rect = video.getBoundingClientRect();
+            overlay.width = rect.width;
+            overlay.height = rect.height;
+            const ctx = overlay.getContext('2d');
+            ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+            const predictions = await cocoModel.detect(video);
+            let best = null;
+            predictions.forEach(p => {
+                if (p.score < 0.5) return; // confidence threshold
+                const [x, y, w, h] = p.bbox;
+                drawBox(ctx, x, y, w, h, p.class, p.score);
+                if (!best || p.score > best.score) best = p;
+            });
+
+            if (best) {
+                resultDisplay.innerHTML = `${capitalize(best.class)} <span style=\"font-size: 0.5em; color: #ccc;\">(${Math.round(best.score * 100)}%)</span>`;
+                if (best.class && best.class !== lastSpoken) {
+                    speak(capitalize(best.class));
+                    lastSpoken = best.class;
+                }
+            } else {
+                resultDisplay.innerHTML = `<span id="status">Looking for objects...</span>`;
+            }
+        }
+
+        function drawBox(ctx, x, y, w, h, label, score) {
+            ctx.strokeStyle = '#00e676';
+            ctx.lineWidth = 3;
+            ctx.fillStyle = 'rgba(0, 230, 118, 0.15)';
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.fill();
+            ctx.stroke();
+
+            const text = `${capitalize(label)} ${Math.round(score * 100)}%`;
+            ctx.font = '18px Roboto, sans-serif';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#00e676';
+            ctx.fillRect(x, y - 24, ctx.measureText(text).width + 10, 22);
+            ctx.fillStyle = '#000';
+            ctx.fillText(text, x + 5, y - 22);
+        }
+
+        function clearCanvas() {
+            const ctx = overlay.getContext('2d');
+            if (!ctx) return;
+            ctx.clearRect(0, 0, overlay.width, overlay.height);
+        }
+
+        function capitalize(s) {
+            if (!s) return s;
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // Function to speak text using the browser's speech synthesis
+        function speak(text) {
+            if (!voiceOn) return;
+            if ('speechSynthesis' in window) {
+                // Cancel any previous speech to avoid overlap
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            }
+
+        }
+
+        // Event listener for the start/stop button
+        startButton.addEventListener('click', () => {
+            if (isDetecting) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        });
+
+        // Mode switch
+        modeSelect.addEventListener('change', () => {
+            mode = modeSelect.value;
+            lastSpoken = '';
+            clearCanvas();
+            if (mode === 'household' && !cocoModel) {
+                statusDisplay.textContent = 'Loading Household model...';
+                cocoSsd.load().then(m => {
+                    cocoModel = m;
+                    statusDisplay.textContent = 'Household model ready.';
+                }).catch(() => {
+                    statusDisplay.textContent = 'Failed to load Household model.';
+                    modeSelect.value = 'general';
+                    mode = 'general';
+                });
+            } else {
+                statusDisplay.textContent = 'Mode changed.';
+            }
+        });
+
+        // Voice toggle
+        voiceToggle.addEventListener('click', () => {
+            voiceOn = !voiceOn;
+            voiceToggle.textContent = `Voice: ${voiceOn ? 'On' : 'Off'}`;
+            voiceToggle.setAttribute('aria-pressed', String(voiceOn));
+            if (!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+        });
+
+        // Initialize the app when the page loads
+        initialize();
+
+    </script>
+</body>
+</html>
+

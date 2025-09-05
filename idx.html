@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FocusRead: Dyslexia-Friendly Web Tool</title>
+  <!-- OpenDyslexic font CDN (or use local if preferred) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic@latest/open-dyslexic.css">
+  <style>
+    body {
+      font-family: 'OpenDyslexic', Arial, sans-serif;
+      background: #fdf6e3;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 2em;
+      background: var(--bgcolor, #fffffa);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      font-size: 1.2em;
+      font-family: inherit;
+      margin-bottom: 1em;
+      padding: 1em;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      resize: vertical;
+    }
+    .output {
+      font-family: 'OpenDyslexic', Arial, sans-serif;
+      letter-spacing: 0.12em;
+      word-spacing: 0.25em;
+      font-size: 1.3em;
+      background: inherit;
+      padding: 1em;
+      border-radius: 8px;
+      min-height: 90px;
+      margin-bottom: 1em;
+      outline: 1px solid #eee;
+    }
+    .highlight {
+      background: #fdff9b;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .controls {
+      display: flex;
+      gap: 1em;
+      align-items: center;
+      margin-bottom: 1em;
+    }
+    label {
+      font-size: 1em;
+    }
+    button {
+      font-size: 1em;
+      padding: 0.6em 1.2em;
+      border: none;
+      border-radius: 6px;
+      background: #556de6;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FocusRead</h1>
+    <p>Paste or type your text below. <br>
+      Instantly view it in a dyslexia-friendly format. <br>
+      Hit <b>Play</b> to have it read aloud with word highlighting.</p>
+    <div class="controls">
+      <label for="bgcolor">Background color:</label>
+      <input type="color" id="bgcolor" value="#fffffa">
+      <button id="playBtn">Play</button>
+    </div>
+    <textarea id="inputText" placeholder="Paste or type text here..."></textarea>
+    <div class="output" id="outputText" tabindex="0"></div>
+  </div>
+  <script>
+    // Elements
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const playBtn = document.getElementById('playBtn');
+    const bgcolorPicker = document.getElementById('bgcolor');
+    const container = document.querySelector('.container');
+
+    // Sync background color
+    bgcolorPicker.addEventListener('input', e => {
+      container.style.setProperty('--bgcolor', bgcolorPicker.value);
+    });
+
+    // Render pasted/typed text in dyslexia-friendly format
+    function renderText() {
+      const text = inputText.value;
+      // Split text into words, wrap each in <span>
+      const html = text.split(/(\s+)/).map(word =>
+        word.trim() ? `<span>${word}</span>` : word
+      ).join('');
+      outputText.innerHTML = html;
+    }
+    inputText.addEventListener('input', renderText);
+    // Initial render
+    renderText();
+
+    // Text-to-speech with word highlighting
+    playBtn.addEventListener('click', () => {
+      const text = inputText.value.trim();
+      if (!text) return;
+      playBtn.disabled = true;
+      // Get all spans (words)
+      const wordSpans = Array.from(outputText.querySelectorAll('span'));
+      let wordIdx = 0;
+
+      // Setup SpeechSynthesis
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1; // adjust for accessibility
+      utter.onboundary = (event) => {
+        if (event.name === 'word') {
+          // Highlight current word
+          wordSpans.forEach(span => span.classList.remove('highlight'));
+          if (wordSpans[wordIdx]) {
+            wordSpans[wordIdx].classList.add('highlight');
+            wordSpans[wordIdx].scrollIntoView({block: 'nearest', behavior: 'smooth'});
+          }
+          wordIdx++;
+        }
+      };
+      utter.onend = () => {
+        wordSpans.forEach(span => span.classList.remove('highlight'));
+        playBtn.disabled = false;
+      };
+      speechSynthesis.cancel(); // Stop previous
+      speechSynthesis.speak(utter);
+    });
+  </script>
+</body>
+</html>
