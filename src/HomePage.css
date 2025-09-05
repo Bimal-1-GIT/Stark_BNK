@@ -29,6 +29,14 @@
   margin: 0 auto;
 }
 
+.intro-text {
+  max-width: 900px;
+  margin: 1rem auto 0;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  opacity: 0.95;
+}
+
 .home-main {
   max-width: 1200px;
   margin: 0 auto;

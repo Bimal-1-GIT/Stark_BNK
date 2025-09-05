@@ -11,6 +11,9 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <header className="home-header">
         <h1>🌟 AccessiCare</h1>
         <p>Empowering accessibility, reading support, and mental wellness for everyone</p>
+        <div className="intro-text">
+          AccessiCare is an inclusive digital platform designed to empower specially-abled individuals through smart tools like sound alert systems, mindful training, AI-powered lenses, and a dyslexia helper—making everyday life more accessible, independent, and supportive.
+        </div>
       </header>
 
       <main className="home-main">
